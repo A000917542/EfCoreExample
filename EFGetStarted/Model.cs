@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 using System;
 using System.Collections.Generic;
 
@@ -20,6 +21,44 @@ public class BloggingContext : DbContext
     // special "local" folder for your platform.
     protected override void OnConfiguring(DbContextOptionsBuilder options)
         => options.UseSqlite($"Data Source={DbPath}");
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        var blogModel = modelBuilder.Entity<Blog>();
+        var postModel = modelBuilder.Entity<Post>();
+        
+        #region "Blog Model Configuration"
+
+        blogModel.HasKey(e => e.BlogId);
+
+        blogModel
+            .Property(e => e.Url)
+            .IsRequired();
+
+        blogModel
+            .HasMany(e => e.Posts)
+            .WithOne(e => e.Blog)
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasForeignKey(e => e.BlogId);
+
+        #endregion
+        
+        #region "Post Model Region"
+
+        postModel.HasKey(e => e.PostId);
+        
+        postModel
+            .Property(e => e.Title)
+            .IsRequired();
+
+        postModel
+            .Property(e => e.Content)
+            .IsRequired();
+
+        #endregion
+    }
 }
 
 public class Blog
